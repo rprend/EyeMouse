@@ -45,7 +45,7 @@ int main() {
 		}
 
 		cv::Mat frame;
-		FaceDetector detector;
+		FaceDetector detector(Dlib_68);
 
 		// Timing latency variables
 		std::chrono::steady_clock::time_point begin;

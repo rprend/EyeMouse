@@ -18,8 +18,8 @@ FaceDetector::FaceDetector() {
 }
 
 FaceDetector::FaceDetector(Detector method) {
-    if (method != OpenCV_DNN) {
-        throw std::invalid_argument("Currently, we only support OpenCV detection");
+    if (method == HaarCascade) {
+        throw std::invalid_argument("Currently, we don't support HaarCascade detection");
     }
 
     method_ = method;
@@ -32,6 +32,10 @@ void FaceDetector::changeMethod(Detector method) {
     case OpenCV_DNN:
         net_ = cv::dnn::readNetFromCaffe(prototxt_file, caffe_model);
         break;
+    case Dlib_68:
+        dlib_ = dlib::get_frontal_face_detector();
+        dlib::deserialize(dlib_68_file) >> dlib_sp_;
+        break; 
     }
 }
 
@@ -98,7 +102,29 @@ void FaceDetector::_detectDNN(cv::Mat &frame) {
 }
 
 void FaceDetector::_detectDLIB(cv::Mat &frame) {
+    cv::Mat gray;
+    cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
 
+    // Convert the opencv frame to a dlib frame
+    dlib::cv_image<dlib::rgb_pixel> dlib_frame(frame);
+
+    std::vector<dlib::rectangle> faces = dlib_(dlib_frame);
+    
+    if (faces.empty()) return;
+
+    int x    = faces[0].left();
+    int y    = faces[0].top();
+    int endX = x + faces[0].width();
+    int endY = y + faces[0].height();
+
+    cv::rectangle(frame, Point(x, y), Point(endX, endY), Scalar(0, 0, 255), 2);
+
+    dlib::full_object_detection shape = dlib_sp_(dlib::cv_image<dlib::rgb_pixel>(frame), faces[0]);
+
+    for(int i = 0; i < shape.num_parts(); ++i){
+        Point p(shape.part(i).x(), shape.part(i).y());
+        cv::circle(frame, p, 2.0, Scalar(255, 0, 0), 1, 8);
+    }
 }
 
 void FaceDetector::_detectHAAR(cv::Mat &frame) {

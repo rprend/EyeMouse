@@ -5,6 +5,11 @@
 #include <opencv2/imgproc.hpp>
 
 #include <dlib/image_processing/frontal_face_detector.h>
+#include <dlib/image_processing/render_face_detections.h>
+#include <dlib/image_processing/shape_predictor.h>
+#include <dlib/image_processing.h>
+#include <dlib/opencv/cv_image.h>
+
 
 // Confidence threshold (>0, <1.0) for deciding if a feature is a face
 const float FACE_CONFIDENCE_THRESHOLD = 0.6;
@@ -52,7 +57,13 @@ private:
     // Neural net for the OpenCv face detection method. Initialized when we select
     // OpenCvDNN as our detection method.
     cv::dnn::Net net_;
+
+    // 
     dlib::frontal_face_detector dlib_;
+    // Loads "shape_predictor_68_face_landmarks.dat" file, which is a pre-trained
+    // cascade of regression tree implemented using "One Millisecond face alignment 
+    // with an ensemble of regression trees"
+    dlib::shape_predictor dlib_sp_;
 
     void _detectDNN(cv::Mat &frame);
     void _detectHAAR(cv::Mat &frame);
