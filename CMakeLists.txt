@@ -6,6 +6,7 @@ include_directories(include)
 include_directories(data)
 
 find_package(OpenCV REQUIRED)
+add_subdirectory(/opt/dlib dlib)
 
 message(STATUS "OpenCV library status:")
 message(STATUS "    config: ${OpenCV_DIR}")
@@ -18,3 +19,4 @@ file(GLOB SOURCES "src/*.cpp")
 add_executable(eyetrack_mouse ${SOURCES})
 
 target_link_libraries(eyetrack_mouse PRIVATE "opencv_dnn_objdetect")
+target_link_libraries(eyetrack_mouse PRIVATE dlib::dlib)
