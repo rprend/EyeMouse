@@ -15,8 +15,19 @@
 const float FACE_CONFIDENCE_THRESHOLD = 0.6;
 
 /**
- * @brief 
+ * @brief The different types of face detection methods
  * 
+ * OpenCv_DNN: A pretrained deep neural network trained to find faces.
+ *  Pros: Most accurate of the three. Second fastest (50-100 ms latency)
+ *  Cons: No eye location provided - need to train a model for that
+ * 
+ * Dlib 68 landmark locator: Pre trained cascade of regression trees.
+ *  Pros: Locates 68 different facial landmarks, including 6 surrounding the eyes
+ *  Cons: Slowest (~150 ms latency). Not as accurate as DNN (needs to be front facing)
+ * 
+ * Haar Cascades:
+ *  Pros:
+ *  Cons:
  */
 enum Detector {
     OpenCV_DNN,
@@ -32,12 +43,18 @@ public:
      * for face detection
      */
     FaceDetector();
+    /**
+     * @brief Construct a new Face Detector object with a specified method
+     * 
+     * @param method The method to use for face detection
+     */
     FaceDetector(Detector method);
 
     /**
-     * @brief 
+     * @brief Performs the currently selected facial recognition method on an image.
+     * Will modify the image to indicate the face.
      * 
-     * @param frame 
+     * @param frame The OpenCV style image to find face on.
      */
     void detectFace(cv::Mat &frame);
 
@@ -50,7 +67,10 @@ public:
     void changeMethod(Detector method);
 
 private:
+    // The method of facial recognition to use.
     Detector method_;
+
+    // The height and width of the last frame used.
     int height_ = 720;
     int width_ = 1080;
 
@@ -58,14 +78,31 @@ private:
     // OpenCvDNN as our detection method.
     cv::dnn::Net net_;
 
-    // 
-    dlib::frontal_face_detector dlib_;
     // Loads "shape_predictor_68_face_landmarks.dat" file, which is a pre-trained
     // cascade of regression tree implemented using "One Millisecond face alignment 
     // with an ensemble of regression trees"
-    dlib::shape_predictor dlib_sp_;
+    dlib::shape_predictor dlib_sp_;    
+    dlib::frontal_face_detector dlib_;
 
+    /**
+     * @brief Performs the OpenCVDNN facial recognition method on an image.
+     * Will draw a bounding box on the image to indicate the face. 
+     * 
+     * @param frame The OpenCV style image to find a face on.
+     */
     void _detectDNN(cv::Mat &frame);
+    /**
+     * @brief Performs a Haar Cascade facial recognition method on an image.
+     * Will modify the image to indicate the face.
+     * 
+     * @param frame The OpenCV style image to find a face on.
+     */
     void _detectHAAR(cv::Mat &frame);
+    /**
+     * @brief Performs the Dlib 68 landmark facial recognition method on an image.
+     * Will draw the 68 landmarks on the image to indicate the face.
+     * 
+     * @param frame The OpenCV style image to find a face on.
+     */
     void _detectDLIB(cv::Mat &frame);
 };

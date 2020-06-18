@@ -80,7 +80,7 @@ int main() {
 			cv::imshow("Webcam Display", frame);
 
 			// Wait 30 ms between frames, and break if escape key is pressed
-			if (cv::waitKey(30) == 27) break;
+			if (cv::waitKey(1) == 27) break;
 		}
 		return 0;
 }

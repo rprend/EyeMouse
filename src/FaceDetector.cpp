@@ -6,40 +6,49 @@ using cv::Scalar;
 using cv::Size;
 using cv::Point;
 
+// NN model files for OpenCV_DNN
 std::string caffe_model = "res10_300x300_ssd_iter_140000.caffemodel";
 std::string prototxt_file = "deploy.prototxt";
 
+// Cascade file for the dlib cascade.
 std::string dlib_68_file = "shape_predictor_68_face_landmarks.dat";
 
 FaceDetector::FaceDetector() {
+    // Default method is the DNN
     method_ = OpenCV_DNN;
 
     changeMethod(method_);
 }
 
 FaceDetector::FaceDetector(Detector method) {
+    // TODO: Implement HaarCascades and remove.
     if (method == HaarCascade) {
         throw std::invalid_argument("Currently, we don't support HaarCascade detection");
     }
 
     method_ = method;
-
     changeMethod(method_);
 }
 
 void FaceDetector::changeMethod(Detector method) {
+    // Load any files and initialize any data structures for the selected method.
     switch (method) {
     case OpenCV_DNN:
+        // Read the trained neural net in the Caffe format from file
         net_ = cv::dnn::readNetFromCaffe(prototxt_file, caffe_model);
         break;
     case Dlib_68:
+        // Initialze the dlib facial detector
         dlib_ = dlib::get_frontal_face_detector();
+        // Load the trained cascade of trees from file.
         dlib::deserialize(dlib_68_file) >> dlib_sp_;
         break; 
     }
 }
 
 void FaceDetector::detectFace(cv::Mat &frame) {
+    // Jump to the private detection function corresponding to the currently
+    // selected detection method.
     switch (method_) {
         case OpenCV_DNN:
             _detectDNN(frame);
@@ -102,25 +111,28 @@ void FaceDetector::_detectDNN(cv::Mat &frame) {
 }
 
 void FaceDetector::_detectDLIB(cv::Mat &frame) {
+    // Generate a greyscaled version of the image
     cv::Mat gray;
     cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
 
-    // Convert the opencv frame to a dlib frame
+    // Convert the opencv frame to a dlib format and run it through the cascade
     dlib::cv_image<dlib::rgb_pixel> dlib_frame(frame);
-
     std::vector<dlib::rectangle> faces = dlib_(dlib_frame);
     
+    // Nothing to draw if we don't detect any faces
     if (faces.empty()) return;
 
+    // Draw an OpenCV rectangle on the outermost boundaries of the landmarks
     int x    = faces[0].left();
     int y    = faces[0].top();
     int endX = x + faces[0].width();
     int endY = y + faces[0].height();
-
     cv::rectangle(frame, Point(x, y), Point(endX, endY), Scalar(0, 0, 255), 2);
 
+    // We use our shape predictor to get all 68 landmark points from the face detector
     dlib::full_object_detection shape = dlib_sp_(dlib::cv_image<dlib::rgb_pixel>(frame), faces[0]);
 
+    // Go through each of the landmarks, convert it to an OpenCV Point, and draw it on the frame.
     for(int i = 0; i < shape.num_parts(); ++i){
         Point p(shape.part(i).x(), shape.part(i).y());
         cv::circle(frame, p, 2.0, Scalar(255, 0, 0), 1, 8);
