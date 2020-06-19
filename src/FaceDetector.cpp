@@ -2,33 +2,12 @@
 
 #include <exception>
 
-using cv::Scalar;
-using cv::Size;
-using cv::Point;
-
 // NN model files for OpenCV_DNN
 std::string caffe_model = "res10_300x300_ssd_iter_140000.caffemodel";
 std::string prototxt_file = "deploy.prototxt";
 
 // Cascade file for the dlib cascade.
 std::string dlib_68_file = "shape_predictor_68_face_landmarks.dat";
-
-FaceDetector::FaceDetector() {
-    // Default method is the DNN
-    method_ = OpenCV_DNN;
-
-    changeMethod(method_);
-}
-
-FaceDetector::FaceDetector(Detector method) {
-    // TODO: Implement HaarCascades and remove.
-    if (method == HaarCascade) {
-        throw std::invalid_argument("Currently, we don't support HaarCascade detection");
-    }
-
-    method_ = method;
-    changeMethod(method_);
-}
 
 void FaceDetector::changeMethod(Detector method) {
     // Load any files and initialize any data structures for the selected method.
@@ -72,7 +51,7 @@ void FaceDetector::_detectDNN(cv::Mat &frame) {
 	//   to 300x300 applying mean subtraction of values (104, 177, 123) for
 	//   each blue, green and red channels correspondingly."
 	cv::Mat blob = cv::dnn::blobFromImage(frame, 1.0,
-						Size(300, 300), Scalar((104, 177, 123)));
+						cv::Size(300, 300), cv::Scalar((104, 177, 123)));
 
 	// Perform forward pass on the current frame - returns a matrix of potential faces.
 	// For unknown reason, the matrix is always 1x1x200x7. There are 200 potential
@@ -102,11 +81,13 @@ void FaceDetector::_detectDNN(cv::Mat &frame) {
 			int endX = faces.at<float>(i, 5) * width_;
 			int endY = faces.at<float>(i, 6) * height_;
 
-			cv::rectangle(frame, Point(x, y), Point(endX, endY), Scalar(0, 0, 255), 2);
+            // Draw the bounding rectangle and save it with our confidence to our face object
+            camux::drawRectangle(frame, x, y, endX, endY);
+            face_.setCoords(x, y, endX, endY);
+            face_.setConfidence(confidence);
 
-			cv::putText(frame, std::to_string(confidence * 100) + "%", cv::Point(x, y - 10), cv::FONT_HERSHEY_SIMPLEX, 0.45, Scalar(0, 0, 255));
-
-		}
+			cv::putText(frame, std::to_string(confidence * 100) + "%", cv::Point(x, y - 10), cv::FONT_HERSHEY_SIMPLEX, 0.45, cv::Scalar(0, 0, 255));
+        }
 	}
 }
 
@@ -127,15 +108,18 @@ void FaceDetector::_detectDLIB(cv::Mat &frame) {
     int y    = faces[0].top();
     int endX = x + faces[0].width();
     int endY = y + faces[0].height();
-    cv::rectangle(frame, Point(x, y), Point(endX, endY), Scalar(0, 0, 255), 2);
+
+    // Draw the bounding rectangle and save it to our face object
+    camux::drawRectangle(frame, x, y, endX, endY);
+    face_.setCoords(x, y, endX, endY);
 
     // We use our shape predictor to get all 68 landmark points from the face detector
     dlib::full_object_detection shape = dlib_sp_(dlib::cv_image<dlib::rgb_pixel>(frame), faces[0]);
 
     // Go through each of the landmarks, convert it to an OpenCV Point, and draw it on the frame.
     for(int i = 0; i < shape.num_parts(); ++i){
-        Point p(shape.part(i).x(), shape.part(i).y());
-        cv::circle(frame, p, 2.0, Scalar(255, 0, 0), 1, 8);
+        cv::Point p(shape.part(i).x(), shape.part(i).y());
+        cv::circle(frame, p, 2.0, cv::Scalar(255, 0, 0), 1, 8);
     }
 }
 

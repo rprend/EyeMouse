@@ -1,22 +1,10 @@
 cmake_minimum_required(VERSION 3.10)
-
 project(eyetrack_mouse)
 
-include_directories(include)
-include_directories(data)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O3")
 
-find_package(OpenCV REQUIRED)
-add_subdirectory(/opt/dlib dlib)
+set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR})
 
-message(STATUS "OpenCV library status:")
-message(STATUS "    config: ${OpenCV_DIR}")
-message(STATUS "    version: ${OpenCV_VERSION}")
-message(STATUS "    libraries: ${OpenCV_LIBS}")
-message(STATUS "    include path: ${OpenCV_INCLUDE_DIRS}")
+add_subdirectory(src)
 
-file(GLOB SOURCES "src/*.cpp")
-
-add_executable(eyetrack_mouse ${SOURCES})
-
-target_link_libraries(eyetrack_mouse PRIVATE "opencv_dnn_objdetect")
-target_link_libraries(eyetrack_mouse PRIVATE dlib::dlib)

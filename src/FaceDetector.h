@@ -1,5 +1,10 @@
 #pragma once
 
+#include "camux/Eye.h"
+#include "camux/Face.h"
+#include "camux/geometry.hpp" 
+
+
 #include <opencv2/highgui.hpp>
 #include <opencv2/dnn.hpp>
 #include <opencv2/imgproc.hpp>
@@ -40,15 +45,39 @@ public:
     /**
      * @brief Construct a default Face Detector object
      * The default FaceDetector object uses the OpenCV DNN
-     * for face detection
+     * for face detection. Face info will be not be saved (use a 
+     * constructor which passes a face object to save that info).
      */
-    FaceDetector();
+    // FaceDetector() : face_() {};
+
+    /**
+     * @brief Construct a default Face Detector object
+     * The default FaceDetector object uses the OpenCV DNN
+     * for face detection.
+     * 
+     * @param face The face object to write face detection info
+     */
+    FaceDetector(camux::Face &face) : face_(face) {
+        // Default method is the DNN
+        method_ = OpenCV_DNN;
+
+        changeMethod(method_);       
+    };
     /**
      * @brief Construct a new Face Detector object with a specified method
      * 
      * @param method The method to use for face detection
+     * @param face The face to write face detection info
      */
-    FaceDetector(Detector method);
+    FaceDetector(const Detector method, camux::Face &face) : face_(face) {
+        // TODO: Implement HaarCascades and remove.
+        if (method == HaarCascade) {
+            throw std::invalid_argument("Currently, we don't support HaarCascade detection");
+        }
+
+        method_ = method;
+        changeMethod(method_);
+    };
 
     /**
      * @brief Performs the currently selected facial recognition method on an image.
@@ -73,6 +102,9 @@ private:
     // The height and width of the last frame used.
     int height_ = 720;
     int width_ = 1080;
+
+    // The face object reference to write the most probable face to.
+    camux::Face & face_;
 
     // Neural net for the OpenCv face detection method. Initialized when we select
     // OpenCvDNN as our detection method.
