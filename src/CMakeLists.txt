@@ -4,8 +4,8 @@ project(eyetrack_src)
 find_package(OpenCV REQUIRED)
 
 set(SRC_SOURCE
-    FaceDetector.cpp
-    FaceDetector.h
+    FaceEyeDetector.cpp
+    FaceEyeDetector.h
     main.cpp
     camux/Eye.h
     camux/Face.cpp

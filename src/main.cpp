@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-// 
+//
 // EyeMouse: Webcam-Based Eye-Tracking Mouse Software.
 // See README.md for installation and use details
 //
@@ -18,7 +18,7 @@
 // Copyright(c) Ryan Prendergast 2020. All Rights Reserved.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "FaceDetector.h" 
+#include "FaceEyeDetector.h"
 #include "camux/Face.h"
 
 #include <iostream>
@@ -43,7 +43,7 @@ double total_latency = 0;
  * Run the GazeMouse software. Opens up a webcam, iterates through each frame, and runs
  * 	the implemented tracking softwares (face detector -> eye detector -> pupil detector ->
  * 	gaze detector). Times the above detectors to track latencies.
- * 
+ *
  */
 int main() {
 		cv::VideoCapture cap(0);
@@ -51,15 +51,16 @@ int main() {
 			std::cerr << "No webcam detected" << std::endl;
 			return -1;
 		}
-				
-		// Initialize the variables to pass to the face detector. Frame holds the image 
-		// data. Face is written by the face detector to hold the coordinates of the face, 
-		// among other properties e.g confidence. 
+
+		// Initialize the variables to pass to the face detector. Frame holds the image
+		// data. Face is written by the face detector to hold the coordinates of the face,
+		// among other properties e.g confidence.
 		cv::Mat frame;
 		camux::Face face;
+		camux::Eye left_eye, right_eye;
 
-		// Initialize the face detector itself using any of the implemented methods.
-		FaceDetector face_detector(Dlib_68, face);
+		// Initialize the face/eye detector itself using any of the implemented methods.
+		FaceEyeDetector face_eye_detector(Dlib_68, face, left_eye, right_eye);
 
 		// Initialize the varibales to pass to the eye detector.
 
@@ -74,13 +75,14 @@ int main() {
 			// Timing latencies for debug
 			std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
-			face_detector.detectFace(frame);
+			face_eye_detector.detectFace(frame);
+			// eye_detector.detectEyes(frame);
 
 			// Timing for the face checking and eye detection process
 			end = std::chrono::steady_clock::now();
 			double frame_latency = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 
-			// eye_detector.detectEyes 
+			// eye_detector.detectEyes
 
 			// Display the processing time for this frame
 			cv::putText(frame, "Frame Latency: " + std::to_string((frame_latency) / MICROSECONDS_PER_SECOND),
