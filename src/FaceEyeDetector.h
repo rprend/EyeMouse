@@ -85,8 +85,6 @@ public:
      */
     void detectFace(cv::Mat &frame);
 
-    void detectEyes(cv::Mat &frame);
-
     /**
      * @brief Opens the files required for the face detection method and initializes
      * the required data structures (e.g neural net)

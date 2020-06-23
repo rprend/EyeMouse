@@ -41,10 +41,6 @@ void FaceEyeDetector::detectFace(cv::Mat &frame) {
     }
 }
 
-void FaceEyeDetector::detectEyes(cv::Mat &frame) {
-  
-}
-
 void FaceEyeDetector::_detectDNN(cv::Mat &frame) {
 	// The dimensions (e.g 720x1080) of the image
 	height_ = frame.size[0];
@@ -139,8 +135,8 @@ void FaceEyeDetector::_detectDLIB(cv::Mat &frame) {
         }
     }
 
-    left_.setCoords(camux::boundingRect(l_eye));
-    right_.setCoords(camux::boundingRect(r_eye));
+    left_.setCoords(camux::boundingRectMargin(l_eye, .1));
+    right_.setCoords(camux::boundingRectMargin(r_eye, .1));
 
     camux::drawRectangle(frame, left_.getCoords());
     camux::drawRectangle(frame, right_.getCoords());

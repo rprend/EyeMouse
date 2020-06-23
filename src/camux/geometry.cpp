@@ -29,6 +29,18 @@ cv::Rect camux::boundingRect(const camux::Points& points) {
 
     return cv::Rect(min_x, min_y, max_x - min_x, max_y - min_y);
 }
+
+cv::Rect camux::boundingRectMargin(const camux::Points& points, const float p_err) {
+    cv::Rect r = camux::boundingRect(points);
+
+    unsigned width = r.width * (1+p_err);
+    unsigned height = r.height * (1+p_err);
+    unsigned x = std::max(r.x - (width - r.width) / 2, (unsigned) 0);
+    unsigned y = std::max(r.y - (height - r.height) / 2, (unsigned) 0); 
+
+    return cv::Rect(x, y, width, height);
+}
+
  
 std::ostream& camux::operator<< (std::ostream& os, const cv::Point2u& p) {
     os << "(" << p.x << ", " << p.y << ")";

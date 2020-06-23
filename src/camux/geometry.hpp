@@ -26,6 +26,18 @@ namespace camux {
      */
     cv::Rect boundingRect(const Points& points);
 
+    /**
+     * @brief Find the bounding rectangle for a group of points with p_err extra margin.
+     *  O(len(points)). Finds the min and max x & y coords. E.g if bounding rect is x=100, y=100, w=100, y=100
+     *  and p_err is .20 (20%), we set the width&height to 125% of their values and subtract half the difference
+     *  from the start points (where possible). So our new rectangle has w=120, h=120, x=90, y=90.
+     *  If we cannot fit center the new rectangle, we try the best we can. 
+     * 
+     * @param points A vector of n points.
+     * @param p_err 
+     * @return cv::Rect 
+     */
+    cv::Rect boundingRectMargin(const Points& points, float p_err);
 
 }
 
