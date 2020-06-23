@@ -1,15 +1,15 @@
 #include "Face.h"
 
-void camux::Face::setCoords(const camux::Point topLeft, const camux::Point bottomRight) {
-    camux::Rectangle r{topLeft, bottomRight};
+void camux::Face::setCoords(const cv::Point2u topLeft, const cv::Point2u bottomRight) {
+    cv::Rect r{topLeft, bottomRight};
     coords_ = r;
 }
 
-void camux::Face::setCoords(const int x, const int y, const int endX, const int endY) {
-    setCoords(Point{x, y}, Point{endX, endY});
+void camux::Face::setCoords(const unsigned x, const unsigned y, const unsigned endX, const unsigned endY) {
+    setCoords(cv::Point2u{x, y}, cv::Point2u{endX, endY});
 }
 
-void camux::Face::setCoords(const camux::Rectangle coords) {
+void camux::Face::setCoords(const cv::Rect coords) {
     coords_ = coords;
 }
 

@@ -55,7 +55,7 @@ int main() {
 		// Initialize the variables to pass to the face detector. Frame holds the image
 		// data. Face is written by the face detector to hold the coordinates of the face,
 		// among other properties e.g confidence.
-		cv::Mat frame;
+		cv::Mat frame, leye_frame, reye_frame;
 		camux::Face face;
 		camux::Eye left_eye, right_eye;
 
@@ -76,13 +76,10 @@ int main() {
 			std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
 			face_eye_detector.detectFace(frame);
-			// eye_detector.detectEyes(frame);
 
 			// Timing for the face checking and eye detection process
 			end = std::chrono::steady_clock::now();
 			double frame_latency = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
-
-			// eye_detector.detectEyes
 
 			// Display the processing time for this frame
 			cv::putText(frame, "Frame Latency: " + std::to_string((frame_latency) / MICROSECONDS_PER_SECOND),
@@ -97,7 +94,15 @@ int main() {
 
 			f_idx = (f_idx + 1) % FPS;
 
+			cv::Rect le = left_eye.getCoords();
+			cv::Rect re = right_eye.getCoords();
+
+			leye_frame = frame(le);
+			reye_frame = frame(re);
+
 			cv::imshow("Webcam Display", frame);
+			cv::imshow("Left eye", leye_frame);
+			cv::imshow("Right eye", reye_frame);
 
 			// Wait 30 ms between frames, and break if escape key is pressed
 			if (cv::waitKey(1) == 27) break;

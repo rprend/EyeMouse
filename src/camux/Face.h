@@ -15,7 +15,7 @@ namespace camux {
          * 
          */
         Face() :
-            coords_{camux::Point(0, 0), camux::Point(0, 0)} {};
+            coords_{cv::Point2u(0, 0), cv::Point2u(0, 0)} {};
 
         /**
          * @brief Construct a new Face object
@@ -25,7 +25,7 @@ namespace camux {
          * @param topRight 
          * @param bottomRight 
          */
-        Face(const camux::Point topLeft, const camux::Point bottomRight) : 
+        Face(const cv::Point2u topLeft, const cv::Point2u bottomRight) : 
             coords_{topLeft, bottomRight} {};
 
         /**
@@ -33,7 +33,7 @@ namespace camux {
          * 
          * @param coords 
          */
-        Face(const camux::Rectangle coords) : 
+        Face(const cv::Rect coords) : 
             coords_(coords) {};
 
         /**
@@ -44,13 +44,13 @@ namespace camux {
          * @param topRight 
          * @param bottomRight 
          */
-        void setCoords(const camux::Point topLeft, const camux::Point bottomRight);
+        void setCoords(const cv::Point2u topLeft, const cv::Point2u bottomRight);
         /**
          * @brief Set the Coords object
          * 
          * @param coords 
          */
-        void setCoords(const camux::Rectangle coords);
+        void setCoords(const cv::Rect coords);
         /**
          * @brief Set the Coords object
          * 
@@ -59,7 +59,7 @@ namespace camux {
          * @param endX 
          * @param endY 
          */ 
-        void setCoords(const int x, const int y, const int endX, const int endY);
+        void setCoords(const unsigned x, const unsigned y, const unsigned endX, const unsigned endY);
 
         /**
          * @brief Set the Confidence object
@@ -71,7 +71,7 @@ namespace camux {
 
     private:
         //
-        camux::Rectangle coords_;
+        cv::Rect coords_;
         //
         float confidence_;
         //

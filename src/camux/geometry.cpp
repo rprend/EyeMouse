@@ -1,31 +1,42 @@
 #include "geometry.hpp"
 
-cv::Point camux::toCvPoint(const Point &p) {
-    return cv::Point(p.x, p.y);
-}
 
 void camux::drawRectangle(cv::Mat &frame, int x, int y, int endX, int endY) {
     cv::rectangle(frame, cv::Point(x, y), cv::Point(endX, endY), cv::Scalar(0, 0, 255), 2);
 }
 
-void camux::drawRectangle(cv::Mat &frame, const camux::Point topLeft, const camux::Point bottomRight) {
+void camux::drawRectangle(cv::Mat &frame, const cv::Point2u topLeft, const cv::Point2u bottomRight) {
     camux::drawRectangle(frame, topLeft.x, topLeft.y, bottomRight.x, bottomRight.y);
 }
 
-void camux::drawRectangle(cv::Mat &frame, const camux::Rectangle &coords) {
-    camux::drawRectangle(frame, coords.topLeft, coords.bottomRight);
+void camux::drawRectangle(cv::Mat &frame, const cv::Rect &coords) {
+    camux::drawRectangle(frame, coords.x, coords.y, coords.x + coords.width, coords.y + coords.height);
 }
 
-camux::Rectangle camux::boundingRect(camux::Points & points) {
-    unsigned min_x, min_y = INT_MAX;
-    unsigned max_x, max_y = 0;
+cv::Rect camux::boundingRect(const camux::Points& points) {  
+    unsigned min_x = UINT_MAX;
+    unsigned min_y = UINT_MAX;
+    unsigned max_x = 1;
+    unsigned max_y = 1;
 
-    for (camux::Point p : points) {
-        if (p.x > max_x) max_x = p.x;
-        else if (p.x < min_x) min_x = p.x;
-        if (p.y > max_y) max_y = p.y;
-        else if (p.y < min_y) min_y = p.y;
+    for (int i = 0; i < points.size(); ++i) {
+        cv::Point2u p = points[i];
+        max_x = std::max(p.x, max_x);
+        max_y = std::max(p.y, max_y);
+        min_x = std::min(p.x, min_x);
+        min_y = std::min(p.y, min_y);
     }
 
-    return camux::Rectangle(camux::Point(min_x, max_y), camux::Point(max_x, min_y));
+    return cv::Rect(min_x, min_y, max_x - min_x, max_y - min_y);
+}
+ 
+std::ostream& camux::operator<< (std::ostream& os, const cv::Point2u& p) {
+    os << "(" << p.x << ", " << p.y << ")";
+    return os;
+}
+
+std::ostream& camux::operator<< (std::ostream& os, const cv::Rect& r) {
+    os << "[" << cv::Point2u(r.x, r.y) << ", " << 
+        cv::Point2u(r.x+r.width, r.y+r.height) << "]";
+    return os;
 }

@@ -11,20 +11,20 @@ namespace camux {
     class Eye {
     public:
         Eye() :
-            type_(Left), coords_{camux::Point(0, 0), camux::Point(0, 0)} {};
+            type_(Left), coords_{cv::Point2u(0, 0), cv::Point2u(0, 0)} {};
 
-        Eye(const EyeType type, camux::Point topLeft, camux::Point bottomRight) : 
+        Eye(const EyeType type, cv::Point2u topLeft, cv::Point2u bottomRight) : 
             type_(type), coords_{topLeft, bottomRight} {};
 
-        Eye(const EyeType type, const camux::Rectangle coords) : 
+        Eye(const EyeType& type, const cv::Rect& coords) : 
             type_(type), coords_(coords) {};
 
-        void setCoords(Rectangle coords) { coords_ = coords; }
-        const camux::Rectangle & getCoords() { return coords_; }
+        void setCoords(const cv::Rect& coords) { coords_ = coords; }
+        cv::Rect getCoords() { return coords_; }
 
     private:
         EyeType type_;
-        camux::Rectangle coords_;
+        cv::Rect coords_;
     };
 }
 
