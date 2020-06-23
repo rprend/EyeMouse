@@ -22,6 +22,8 @@ namespace camux {
         void setCoords(const cv::Rect& coords) { coords_ = coords; }
         cv::Rect getCoords() { return coords_; }
 
+        cv::Point2u findPupilCenter(cv::Mat& eye);
+
     private:
         EyeType type_;
         cv::Rect coords_;

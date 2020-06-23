@@ -8,6 +8,7 @@ set(SRC_SOURCE
     FaceEyeDetector.h
     main.cpp
     camux/Eye.h
+    camux/Eye.cpp
     camux/Face.cpp
     camux/Face.h
     camux/geometry.cpp

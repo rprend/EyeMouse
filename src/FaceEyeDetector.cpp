@@ -82,11 +82,11 @@ void FaceEyeDetector::_detectDNN(cv::Mat &frame) {
 			int endY = faces.at<float>(i, 6) * height_;
 
             // Draw the bounding rectangle and save it with our confidence to our face object
-            camux::drawRectangle(frame, x, y, endX, endY);
+            // camux::drawRectangle(frame, x, y, endX, endY);
             face_.setCoords(x, y, endX, endY);
             face_.setConfidence(confidence);
 
-			cv::putText(frame, std::to_string(confidence * 100) + "%", cv::Point(x, y - 10), cv::FONT_HERSHEY_SIMPLEX, 0.45, cv::Scalar(0, 0, 255));
+			// cv::putText(frame, std::to_string(confidence * 100) + "%", cv::Point(x, y - 10), cv::FONT_HERSHEY_SIMPLEX, 0.45, cv::Scalar(0, 0, 255));
         }
 	}
 }
@@ -110,7 +110,7 @@ void FaceEyeDetector::_detectDLIB(cv::Mat &frame) {
     int endY = y + faces[0].height();
 
     // Draw the bounding rectangle and save it to our face object
-    camux::drawRectangle(frame, x, y, endX, endY);
+    // camux::drawRectangle(frame, x, y, endX, endY);
     face_.setCoords(x, y, endX, endY);
 
     // We use our shape predictor to get all 68 landmark points from the face detector
@@ -123,24 +123,33 @@ void FaceEyeDetector::_detectDLIB(cv::Mat &frame) {
 
         // Left Eye landmarks
         if (i >= 36 && i <= 41) {
-            cv::circle(frame, p, 2.0, cv::Scalar(0, 255, 255), 1, 8);
+            // cv::circle(frame, p, 2.0, cv::Scalar(0, 255, 255), 1, 8);
             l_eye.push_back(p);
         }
         // Right Eye landmarks 
         else if (i >= 42 && i <= 47) {
-            cv::circle(frame, p, 2.0, cv::Scalar(255, 255, 0), 1, 8);
+            // cv::circle(frame, p, 2.0, cv::Scalar(255, 255, 0), 1, 8);
             r_eye.push_back(p);
         } else {
             cv::circle(frame, p, 2.0, cv::Scalar(255, 0, 0), 1, 8);
         }
     }
 
-    left_.setCoords(camux::boundingRectMargin(l_eye, .1));
-    right_.setCoords(camux::boundingRectMargin(r_eye, .1));
+    left_.setCoords(camux::boundingRectMargin(l_eye, .5));
+    right_.setCoords(camux::boundingRectMargin(r_eye, .5));
 
-    camux::drawRectangle(frame, left_.getCoords());
-    camux::drawRectangle(frame, right_.getCoords());
+    // camux::drawRectangle(frame, left_.getCoords());
+    // camux::drawRectangle(frame, right_.getCoords());
 }
 
 void FaceEyeDetector::_detectHAAR(cv::Mat &frame) {
+}
+
+void FaceEyeDetector::drawFace(cv::Mat& frame) {
+    camux::drawRectangle(frame, face_.getCoords());
+}
+
+void FaceEyeDetector::drawEyes(cv::Mat& frame) {
+    camux::drawRectangle(frame, left_.getCoords());
+    camux::drawRectangle(frame, right_.getCoords());
 }

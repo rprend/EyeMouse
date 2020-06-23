@@ -68,6 +68,7 @@ namespace camux {
          */
         void setConfidence(const float conf);
 
+        cv::Rect getCoords() { return coords_; }
 
     private:
         //

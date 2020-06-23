@@ -100,9 +100,22 @@ int main() {
 			leye_frame = frame(le);
 			reye_frame = frame(re);
 
-			cv::imshow("Webcam Display", frame);
+			cv::resize(leye_frame, leye_frame, cv::Size(), 2, 2, cv::INTER_CUBIC);
+			cv::resize(reye_frame, reye_frame, cv::Size(), 2, 2, cv::INTER_CUBIC);
+
+			cv::cvtColor(leye_frame, leye_frame, cv::COLOR_BGR2GRAY);
+			cv::cvtColor(reye_frame, reye_frame, cv::COLOR_BGR2GRAY);
+
+			cv::equalizeHist(leye_frame, leye_frame);
+			cv::equalizeHist(reye_frame, reye_frame);
+
 			cv::imshow("Left eye", leye_frame);
 			cv::imshow("Right eye", reye_frame);
+			
+			face_eye_detector.drawFace(frame);
+			face_eye_detector.drawEyes(frame);
+
+			cv::imshow("Webcam Display", frame);
 
 			// Wait 30 ms between frames, and break if escape key is pressed
 			if (cv::waitKey(1) == 27) break;

@@ -93,6 +93,10 @@ public:
      */
     void changeMethod(Detector method);
 
+    void drawFace(cv::Mat& frame);
+
+    void drawEyes(cv::Mat& frame);
+
 private:
     // The method of facial recognition to use.
     Detector method_;
