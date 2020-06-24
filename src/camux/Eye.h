@@ -3,11 +3,14 @@
 #include "geometry.hpp"
 
 namespace camux {
+    
+    // EyeType enum useful for
     enum EyeType {
         Left,
         Right
     };
 
+    
     class Eye {
     public:
         Eye() :
@@ -21,12 +24,15 @@ namespace camux {
 
         void setCoords(const cv::Rect& coords) { coords_ = coords; }
         cv::Rect getCoords() { return coords_; }
+        int getPupilRadius() { return pupil_radius_; }
 
         cv::Point2u findPupilCenter(cv::Mat& eye);
 
     private:
         EyeType type_;
         cv::Rect coords_;
+        cv::Point center_;
+        int pupil_radius_;
     };
 }
 

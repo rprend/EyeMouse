@@ -16,7 +16,7 @@
 #include <dlib/opencv/cv_image.h>
 
 
-// Confidence threshold (>0, <1.0) for deciding if a feature is a face
+// Tunable confidence threshold (>0, <1.0) for deciding if a feature is a face
 const float FACE_CONFIDENCE_THRESHOLD = 0.6;
 
 /**
@@ -40,6 +40,14 @@ enum Detector {
     HaarCascade
 };
 
+/**
+ * @brief A detector of a face and its eyes. You construct it with face and eye objects
+ *  as well as an image which you want to detect a face and its eyes on and a selection of a 
+ *  face detection method you'd like to use (see enum Detector above). Call the detect method
+ *  with that image to save the relevant info. Can draw bounding boxes for the face/eyes as well as
+ *  a 68 landmark feature summary of the image.
+ *
+ */
 class FaceEyeDetector {
 public:
     /**
@@ -93,8 +101,25 @@ public:
      */
     void changeMethod(Detector method);
 
+    /**
+     * @brief Draw the bounding rectangle of the last detected face on a frame.
+     *
+     * TODO: See drawEyes() for why this is a poor design for this function.
+     *
+     * @param frame The cv::Mat image to draw the face onto
+     */
     void drawFace(cv::Mat& frame);
 
+    /**
+     * @brief Draw the bounding rectangle of the last detected eyes on a frame. Requires
+     * that you pass the same frame you used in detecting the face/eyes in order for the coordinates to
+     * match. 
+     * TODO: That's dumb. Save a reference to the frame when we run detect(), since the bounding rectangle
+     * is entirely relative to the coordinate system of that frame. It's useless for frames other than those
+     * with the same coordinate system.
+     *
+     * @param frame The image to draw the face onto.
+     */
     void drawEyes(cv::Mat& frame);
 
 private:

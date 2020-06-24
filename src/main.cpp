@@ -100,14 +100,29 @@ int main() {
 			leye_frame = frame(le);
 			reye_frame = frame(re);
 
-			cv::resize(leye_frame, leye_frame, cv::Size(), 2, 2, cv::INTER_CUBIC);
-			cv::resize(reye_frame, reye_frame, cv::Size(), 2, 2, cv::INTER_CUBIC);
-
 			cv::cvtColor(leye_frame, leye_frame, cv::COLOR_BGR2GRAY);
 			cv::cvtColor(reye_frame, reye_frame, cv::COLOR_BGR2GRAY);
 
 			cv::equalizeHist(leye_frame, leye_frame);
 			cv::equalizeHist(reye_frame, reye_frame);
+
+			cv::Point left_eye_center = left_eye.findPupilCenter(leye_frame);
+			cv::Point right_eye_center = right_eye.findPupilCenter(reye_frame);
+	
+			left_eye_center.x += left_eye.getCoords().x;
+			left_eye_center.y += left_eye.getCoords().y;
+
+	        cv::circle(frame, left_eye_center, 3, cv::Scalar(0,255,0), -1);
+        	// cv::circle(frame, left_eye_center, left_eye.getPupilRadius(), cv::Scalar(0,0,255));
+
+			right_eye_center.x += right_eye.getCoords().x;
+			right_eye_center.y += right_eye.getCoords().y;
+
+	        cv::circle(frame, right_eye_center, 3, cv::Scalar(0,255,0), -1);
+        	// cv::circle(frame, right_eye_center, right_eye.getPupilRadius(), cv::Scalar(0,0,255));
+
+			cv::resize(leye_frame, leye_frame, cv::Size(), 2, 2, cv::INTER_CUBIC);
+			cv::resize(reye_frame, reye_frame, cv::Size(), 2, 2, cv::INTER_CUBIC);
 
 			cv::imshow("Left eye", leye_frame);
 			cv::imshow("Right eye", reye_frame);
