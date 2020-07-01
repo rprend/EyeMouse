@@ -10,7 +10,10 @@ namespace camux {
         Right
     };
 
-    
+    /**
+     * @brief 
+     * 
+     */
     class Eye {
     public:
         Eye() :

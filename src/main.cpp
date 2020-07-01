@@ -71,6 +71,8 @@ int main() {
 		// Iterate through webcam frames until we receive escape
 		while(1) {
 			cap >> frame;
+			
+			// cv::cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
 
 			// Timing latencies for debug
 			std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
@@ -100,11 +102,11 @@ int main() {
 			leye_frame = frame(le);
 			reye_frame = frame(re);
 
-			cv::cvtColor(leye_frame, leye_frame, cv::COLOR_BGR2GRAY);
-			cv::cvtColor(reye_frame, reye_frame, cv::COLOR_BGR2GRAY);
+			// cv::cvtColor(leye_frame, leye_frame, cv::COLOR_BGR2GRAY);
+			// cv::cvtColor(reye_frame, reye_frame, cv::COLOR_BGR2GRAY);
 
-			cv::equalizeHist(leye_frame, leye_frame);
-			cv::equalizeHist(reye_frame, reye_frame);
+			// cv::equalizeHist(leye_frame, leye_frame);
+			// cv::equalizeHist(reye_frame, reye_frame);
 
 			cv::Point left_eye_center = left_eye.findPupilCenter(leye_frame);
 			cv::Point right_eye_center = right_eye.findPupilCenter(reye_frame);
