@@ -38,6 +38,41 @@ int img_height = 720;
 int img_width = 1080;
 double total_latency = 0;
 
+int low_H = 97, low_S = 43, low_V = 0;
+int high_H = 147, high_S = 255, high_V = 255;
+int max_H = 179, max_SV = 255;
+
+std::string webcam_window = "Webcam Display";
+
+static void on_low_H_thresh_trackbar(int, void *) {
+    low_H = std::min(high_H-1, low_H);
+    cv::setTrackbarPos("Low H", webcam_window, low_H);
+}
+
+static void on_high_H_thresh_trackbar(int, void *) {
+    high_H = std::max(high_H, low_H+1);
+    cv::setTrackbarPos("High H", webcam_window, high_H);
+}
+
+static void on_low_S_thresh_trackbar(int, void *) {
+    low_S = std::min(high_S-1, low_S);
+    cv::setTrackbarPos("Low S", webcam_window, low_S);
+}
+
+static void on_high_S_thresh_trackbar(int, void *) {
+    high_S = std::max(high_S, low_S+1);
+    cv::setTrackbarPos("High S", webcam_window, high_S);
+}
+
+static void on_low_V_thresh_trackbar(int, void *) {
+    low_V = std::min(high_V-1, low_V);
+    cv::setTrackbarPos("Low V", webcam_window, low_V);
+}
+
+static void on_high_V_thresh_trackbar(int, void *) {
+    high_V = std::max(high_V, low_V+1);
+    cv::setTrackbarPos("High V", webcam_window, high_V);
+}
 
 /**
  * Run the GazeMouse software. Opens up a webcam, iterates through each frame, and runs
@@ -55,7 +90,7 @@ int main() {
 		// Initialize the variables to pass to the face detector. Frame holds the image
 		// data. Face is written by the face detector to hold the coordinates of the face,
 		// among other properties e.g confidence.
-		cv::Mat frame, leye_frame, reye_frame;
+		cv::Mat frame, leye_frame, reye_frame, hsv, hsv_out;
 		camux::Face face;
 		camux::Eye left_eye, right_eye;
 
@@ -68,11 +103,27 @@ int main() {
 		std::chrono::steady_clock::time_point begin;
 		std::chrono::steady_clock::time_point end;
 
+		cv::namedWindow(webcam_window);
+
+		cv::createTrackbar("Low H", webcam_window, &low_H, max_H, on_low_H_thresh_trackbar);
+		cv::createTrackbar("High H", webcam_window, &high_H, max_H, on_high_H_thresh_trackbar);
+		cv::createTrackbar("Low S", webcam_window, &low_S, max_SV, on_low_S_thresh_trackbar);
+		cv::createTrackbar("High S", webcam_window, &high_S, max_SV, on_high_S_thresh_trackbar);
+		cv::createTrackbar("Low V", webcam_window, &low_V, max_SV, on_low_V_thresh_trackbar);
+		cv::createTrackbar("High V", webcam_window, &high_V, max_SV, on_high_V_thresh_trackbar);
+
 		// Iterate through webcam frames until we receive escape
 		while(1) {
 			cap >> frame;
 			
 			// cv::cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
+
+			// Identify the red on the image (for forehead dot feature)
+			cv::cvtColor(frame, hsv, cv::COLOR_BGR2HSV);
+			// cv::InputArray lower_pink = []; 
+
+			cv::inRange(hsv, cv::Scalar(low_H, low_S, low_V), cv::Scalar(high_H, high_S, high_V), hsv_out);
+			cv::imshow("Selected parts of the image", hsv_out);
 
 			// Timing latencies for debug
 			std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
@@ -132,7 +183,7 @@ int main() {
 			face_eye_detector.drawFace(frame);
 			face_eye_detector.drawEyes(frame);
 
-			cv::imshow("Webcam Display", frame);
+			cv::imshow(webcam_window, frame);
 
 			// Wait 30 ms between frames, and break if escape key is pressed
 			if (cv::waitKey(1) == 27) break;
