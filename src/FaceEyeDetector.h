@@ -4,7 +4,7 @@
 #include "camux/Face.h"
 #include "camux/geometry.hpp"
 
-
+#include "opencv2/objdetect/objdetect.hpp"
 #include <opencv2/highgui.hpp>
 #include <opencv2/dnn.hpp>
 #include <opencv2/imgproc.hpp>
@@ -76,10 +76,6 @@ public:
      */
     FaceEyeDetector(const Detector method, camux::Face &face, camux::Eye &l_eye, camux::Eye &r_eye) :
       face_(face), left_(l_eye), right_(r_eye) {
-        // TODO: Implement HaarCascades and remove.
-        if (method == HaarCascade) {
-            throw std::invalid_argument("Currently, we don't support HaarCascade detection");
-        }
 
         method_ = method;
         changeMethod(method_);
@@ -156,6 +152,9 @@ private:
     // with an ensemble of regression trees"
     dlib::shape_predictor dlib_sp_;
     dlib::frontal_face_detector dlib_;
+
+    cv::CascadeClassifier haar_face_;
+    cv::CascadeClassifier haar_eye_;
 
     /**
      * @brief Performs the OpenCVDNN facial recognition method on an image.

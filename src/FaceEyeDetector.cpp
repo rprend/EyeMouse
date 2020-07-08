@@ -6,6 +6,10 @@
 std::string caffe_model = "res10_300x300_ssd_iter_140000.caffemodel";
 std::string prototxt_file = "deploy.prototxt";
 
+// Haar cascade files for face and eye detection
+std::string haar_face_file = "haarcascades/haarcascade_frontalface_alt.xml";
+std::string haar_eye_file = "haarcascades/haarcascade_eye.xml";
+
 // Cascade file for the dlib cascade.
 std::string dlib_68_file = "shape_predictor_68_face_landmarks.dat"; 
 
@@ -22,6 +26,10 @@ void FaceEyeDetector::changeMethod(Detector method) {
         // Load the trained cascade of trees from file.
         dlib::deserialize(dlib_68_file) >> dlib_sp_;
         break;
+    case HaarCascade:
+        haar_face_.load(haar_face_file);
+        haar_eye_.load(haar_eye_file);
+        break;    
     }
 }
 
@@ -107,7 +115,7 @@ void FaceEyeDetector::_detectDLIB(cv::Mat &frame) {
     if (faces.empty()) return;
 
     landmarks_.clear();
-    // Draw an OpenCV rectangle on the outermost boundaries of the landmarks
+    // Define an OpenCV rectangle on the outermost boundaries of the landmarks
     int x    = faces[0].left();
     int y    = faces[0].top();
     int endX = x + faces[0].width();
@@ -147,6 +155,47 @@ void FaceEyeDetector::_detectDLIB(cv::Mat &frame) {
 }
 
 void FaceEyeDetector::_detectHAAR(cv::Mat &frame) {
+    cv::Mat gray;
+    std::vector<cv::Rect> faces;
+
+    if (frame.empty()) return;
+    cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+    haar_face_.detectMultiScale(gray, faces);
+
+    if (faces.empty()) return;
+    cv::Rect face = faces[0];
+
+    face_.setCoords(face);
+
+    std::vector<cv::Rect> eyes;
+    cv::Mat face_frame = gray(face_.getCoords());
+    haar_eye_.detectMultiScale(face_frame, eyes);
+
+    left_ = camux::Eye(camux::Left, cv::Rect(eyes[0].x + face_.getCoords().x, eyes[0].y + face_.getCoords().y,
+                eyes[0].width, eyes[0].height));
+    
+    right_ = camux::Eye(camux::Right, cv::Rect(cv::Point(50, 50), cv::Point(70, 70)));
+   
+    int eyes_found = 0;
+    for (int i = 0; i < eyes.size(); ++i) {
+        cv::Rect eye = eyes[i];
+
+        // Eliminate anything too far down; eyes are always on the upper part of the face
+        if (eye.y > face.height / 2.5) continue;
+
+        // Right eye will have an upper left corner on the left side of the screen (mirrored image).
+        if (eye.x < face.width / 2) {
+            right_ = camux::Eye(camux::Right, 
+                cv::Rect(eye.x + face.x, eye.y + face.y, eye.width, eye.height));
+            eyes_found++;
+        } else {
+            left_ = camux::Eye(camux::Left, 
+                cv::Rect(eye.x + face.x, eye.y + face.y, eye.width, eye.height));
+            eyes_found++;
+        }
+        
+        if (eyes_found >= 2) break;
+    }
 }
 
 void FaceEyeDetector::drawFace(cv::Mat& frame) {

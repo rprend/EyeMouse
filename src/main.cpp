@@ -95,7 +95,7 @@ int main() {
 		camux::Eye left_eye, right_eye;
 
 		// Initialize the face/eye detector itself using any of the implemented methods.
-		FaceEyeDetector face_eye_detector(Dlib_68, face, left_eye, right_eye);
+		FaceEyeDetector face_eye_detector(HaarCascade, face, left_eye, right_eye);
 
 		// Initialize the varibales to pass to the eye detector.
 
