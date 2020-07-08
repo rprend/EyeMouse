@@ -8,6 +8,8 @@ cv::Point2u camux::Eye::findPupilCenter(cv::Mat& eye) {
 
     std::vector<cv::Vec3f> circles;
 
+    if (eye.empty()) return center_;
+
     cv::cvtColor(eye, eye, cv::COLOR_BGR2GRAY);
 	cv::equalizeHist(eye, eye);
 

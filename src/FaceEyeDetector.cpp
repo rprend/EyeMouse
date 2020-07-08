@@ -94,6 +94,9 @@ void FaceEyeDetector::_detectDNN(cv::Mat &frame) {
 void FaceEyeDetector::_detectDLIB(cv::Mat &frame) {
     // Generate a greyscaled version of the image
     cv::Mat gray;
+
+    if (frame.empty()) return;
+    
     cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
 
     // Convert the opencv frame to a dlib format and run it through the cascade
@@ -103,6 +106,7 @@ void FaceEyeDetector::_detectDLIB(cv::Mat &frame) {
     // Nothing to draw if we don't detect any faces
     if (faces.empty()) return;
 
+    landmarks_.clear();
     // Draw an OpenCV rectangle on the outermost boundaries of the landmarks
     int x    = faces[0].left();
     int y    = faces[0].top();
@@ -131,7 +135,7 @@ void FaceEyeDetector::_detectDLIB(cv::Mat &frame) {
             // cv::circle(frame, p, 2.0, cv::Scalar(255, 255, 0), 1, 8);
             r_eye.push_back(p);
         } else {
-            cv::circle(frame, p, 2.0, cv::Scalar(255, 0, 0), 1, 8);
+            landmarks_.push_back(p);
         }
     }
 
@@ -152,4 +156,10 @@ void FaceEyeDetector::drawFace(cv::Mat& frame) {
 void FaceEyeDetector::drawEyes(cv::Mat& frame) {
     camux::drawRectangle(frame, left_.getCoords());
     camux::drawRectangle(frame, right_.getCoords());
+}
+
+void FaceEyeDetector::drawLandmarks(cv::Mat& frame) {
+    for (cv::Point2u p : landmarks_) {
+        cv::circle(frame, p, 2.0, cv::Scalar(255, 0, 0), 1, 8);
+    }
 }

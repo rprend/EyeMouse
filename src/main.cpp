@@ -90,7 +90,7 @@ int main() {
 		// Initialize the variables to pass to the face detector. Frame holds the image
 		// data. Face is written by the face detector to hold the coordinates of the face,
 		// among other properties e.g confidence.
-		cv::Mat frame, leye_frame, reye_frame, hsv, hsv_out;
+		cv::Mat frame, leye_frame, reye_frame, hsv, hsv_out, face_frame;
 		camux::Face face;
 		camux::Eye left_eye, right_eye;
 
@@ -117,13 +117,6 @@ int main() {
 			cap >> frame;
 			
 			// cv::cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
-
-			// Identify the red on the image (for forehead dot feature)
-			cv::cvtColor(frame, hsv, cv::COLOR_BGR2HSV);
-			// cv::InputArray lower_pink = []; 
-
-			cv::inRange(hsv, cv::Scalar(low_H, low_S, low_V), cv::Scalar(high_H, high_S, high_V), hsv_out);
-			cv::imshow("Selected parts of the image", hsv_out);
 
 			// Timing latencies for debug
 			std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
@@ -153,35 +146,59 @@ int main() {
 			leye_frame = frame(le);
 			reye_frame = frame(re);
 
-			// cv::cvtColor(leye_frame, leye_frame, cv::COLOR_BGR2GRAY);
-			// cv::cvtColor(reye_frame, reye_frame, cv::COLOR_BGR2GRAY);
+			cv::Rect face_rect = face_eye_detector.getFace().getCoords();
+			face_frame = frame(face_rect);
 
-			// cv::equalizeHist(leye_frame, leye_frame);
-			// cv::equalizeHist(reye_frame, reye_frame);
-
-			cv::Point left_eye_center = left_eye.findPupilCenter(leye_frame);
-			cv::Point right_eye_center = right_eye.findPupilCenter(reye_frame);
-	
-			left_eye_center.x += left_eye.getCoords().x;
-			left_eye_center.y += left_eye.getCoords().y;
-
-	        cv::circle(frame, left_eye_center, 3, cv::Scalar(0,255,0), -1);
-        	// cv::circle(frame, left_eye_center, left_eye.getPupilRadius(), cv::Scalar(0,0,255));
-
-			right_eye_center.x += right_eye.getCoords().x;
-			right_eye_center.y += right_eye.getCoords().y;
-
-	        cv::circle(frame, right_eye_center, 3, cv::Scalar(0,255,0), -1);
-        	// cv::circle(frame, right_eye_center, right_eye.getPupilRadius(), cv::Scalar(0,0,255));
-
-			cv::resize(leye_frame, leye_frame, cv::Size(), 2, 2, cv::INTER_CUBIC);
-			cv::resize(reye_frame, reye_frame, cv::Size(), 2, 2, cv::INTER_CUBIC);
-
-			cv::imshow("Left eye", leye_frame);
-			cv::imshow("Right eye", reye_frame);
+			if (!face_frame.empty()) {
+				// Identify the red on the image (for forehead dot feature)
+				cv::cvtColor(face_frame, hsv, cv::COLOR_BGR2HSV);
+				// cv::InputArray lower_pink = []; 
+				
+				// cv::GaussianBlur(hsv, hsv, cv::Size(3, 3), 0);
+				cv::inRange(hsv, cv::Scalar(low_H, low_S, low_V), cv::Scalar(high_H, high_S, high_V), hsv_out);
+				// cv::GaussianBlur(hsv_out, hsv_out, cv::Size(3, 3), 0);
 			
-			face_eye_detector.drawFace(frame);
-			face_eye_detector.drawEyes(frame);
+				cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
+				cv::morphologyEx(hsv_out, hsv_out, cv::MORPH_OPEN, kernel);
+				
+				std::vector<std::vector<cv::Point>> contours;
+				cv::findContours(hsv_out, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+
+				cv::drawContours(hsv_out, contours, -1, cv::Scalar(128,255,0), 1);
+
+				cv::imshow("Selected parts of the image", hsv_out);
+	
+				// cv::cvtColor(leye_frame, leye_frame, cv::COLOR_BGR2GRAY);
+				// cv::cvtColor(reye_frame, reye_frame, cv::COLOR_BGR2GRAY);
+
+				// cv::equalizeHist(leye_frame, leye_frame);
+				// cv::equalizeHist(reye_frame, reye_frame);
+
+				cv::Point left_eye_center = left_eye.findPupilCenter(leye_frame);
+				cv::Point right_eye_center = right_eye.findPupilCenter(reye_frame);
+		
+				left_eye_center.x += left_eye.getCoords().x;
+				left_eye_center.y += left_eye.getCoords().y;
+
+				cv::circle(frame, left_eye_center, 3, cv::Scalar(0,255,0), -1);
+				// cv::circle(frame, left_eye_center, left_eye.getPupilRadius(), cv::Scalar(0,0,255));
+
+				right_eye_center.x += right_eye.getCoords().x;
+				right_eye_center.y += right_eye.getCoords().y;
+
+				cv::circle(frame, right_eye_center, 3, cv::Scalar(0,255,0), -1);
+				// cv::circle(frame, right_eye_center, right_eye.getPupilRadius(), cv::Scalar(0,0,255));
+
+				cv::resize(leye_frame, leye_frame, cv::Size(), 2, 2, cv::INTER_CUBIC);
+				cv::resize(reye_frame, reye_frame, cv::Size(), 2, 2, cv::INTER_CUBIC);
+
+				cv::imshow("Left eye", leye_frame);
+				cv::imshow("Right eye", reye_frame);
+				
+				face_eye_detector.drawFace(frame);
+				face_eye_detector.drawEyes(frame);
+				face_eye_detector.drawLandmarks(frame);
+			}
 
 			cv::imshow(webcam_window, frame);
 

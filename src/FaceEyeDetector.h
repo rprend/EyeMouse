@@ -122,6 +122,15 @@ public:
      */
     void drawEyes(cv::Mat& frame);
 
+    void drawLandmarks(cv::Mat& frame);
+
+    /**
+     * @brief Get the Face object
+     * 
+     * @return camux::Face& 
+     */
+    camux::Face & getFace() { return face_; }
+
 private:
     // The method of facial recognition to use.
     Detector method_;
@@ -134,6 +143,9 @@ private:
     camux::Face & face_;
     camux::Eye & left_;
     camux::Eye & right_;
+
+    // The facial landmarks (other than those belonging to the eyes)
+    std::vector<cv::Point2u> landmarks_;
 
     // Neural net for the OpenCv face detection method. Initialized when we select
     // OpenCvDNN as our detection method.
