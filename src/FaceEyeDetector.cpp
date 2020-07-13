@@ -178,7 +178,7 @@ void FaceEyeDetector::_detectHAAR(cv::Mat &frame) {
     //             eyes[0].width, eyes[0].height));
     
     // right_ = camux::Eye(camux::Right, cv::Rect(cv::Point(50, 50), cv::Point(70, 70)));
-    std::cout << weights.size() << " eyes found" << std::endl;
+    // std::cout << weights.size() << " eyes found" << std::endl;
     
     if (weights.size() < 2) return;
 
@@ -209,7 +209,7 @@ void FaceEyeDetector::_detectHAAR(cv::Mat &frame) {
     // most confident eye, and save the index of whicheve has the lower x value
     int right_eye_idx = eyes[best_eyes[0].second].x < eyes[best_eyes[1].second].x ?
                             best_eyes[0].second : best_eyes[1].second; 
-    // The left eye is simply the other eye.
+    // The left eye is simply the other eye of the two best predictions.
     int left_eye_idx = right_eye_idx == best_eyes[0].second ? best_eyes[1].second : best_eyes[0].second;
     
     cv::Rect r_eye = eyes[right_eye_idx];
@@ -220,35 +220,6 @@ void FaceEyeDetector::_detectHAAR(cv::Mat &frame) {
 
     left_.setCoords(cv::Rect(l_eye.x + face.x, l_eye.y + face.y, l_eye.width, l_eye.height));
     left_.setConfidence(weights[left_eye_idx]);
-
-
-// for (int i = 0; i < eyes.size(); ++i) {
-//     cv::Rect eye = eyes[i];
-//     if (weights.size() == 3) {
-//         std::cout << "Eye " << i << " weight is " << weights[i] << ";";
-//     }
-
-//     // Eliminate anything too far down; eyes are always on the upper part of the face
-//     if (eye.y > face.height / 2.5) continue;
-
-//     // Right eye will have an upper left corner on the left side of the screen (mirrored image).
-//     if (eye.x < face.width / 2) {
-//         int prev_eye_area = right_.getEyeArea();
-//         // if (prev_eye_area != 0 && (eye.width * eye.height < .5 * prev_eye_area || eye.width * eye.height > 1.5 * prev_eye_area)) { continue; }
-//         right_.setCoords(cv::Rect(eye.x + face.x, eye.y + face.y, eye.width, eye.height));
-//         right_.setConfidence(weigths[i]);
-//         // eyes_found++;
-//     } else {
-//         int prev_eye_area = left_.getEyeArea();
-//         // if (prev_eye_area != 0 && (eye.width * eye.height < .5 * prev_eye_area || eye.width * eye.height > 1.5 * prev_eye_area)) { continue; }
-
-//         left_.setCoords(cv::Rect(eye.x + face.x, eye.y + face.y, eye.width, eye.height));
-//         // eyes_found++;
-//     }
-    
-//     // if (eyes_found >= 2) break;
-// }
-    std::cout << std::endl;
 }
 
 void FaceEyeDetector::drawFace(cv::Mat& frame) {

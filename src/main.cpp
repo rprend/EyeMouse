@@ -24,6 +24,8 @@
 #include <iostream>
 #include <chrono>
 
+#include <queue>
+
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
@@ -32,18 +34,28 @@
 const int MICROSECONDS_PER_SECOND = 1000000;
 const int FPS = 30;
 
+// The number of frames to calibrate our reference points for. Should be >=30 to ensure
+// statistical properties, but not too high to damage performance. Right now it is set high
+// to account for the inaccuracy of our pupil localization (gives us the chance to reject lots
+// of outliers)
+const static int CALIBRATION_LENGTH = 75;
+
 // Frame Index - Iterates each frame from 0 to $FPS-1. For timing granularity.
 int f_idx = 0;
 int img_height = 720;
 int img_width = 1080;
 double total_latency = 0;
 
+// These are the tunable parameters for the blue dot localization. HIGHLY DEPENDENT ON
+// THE ENVIRONMENT! TODO: Fix this by replacing these hand picked parameters with an actually
+// general selection of the dot feature on the forehead.
 int low_H = 98, low_S = 43, low_V = 0;
 int high_H = 119, high_S = 255, high_V = 156;
 int max_H = 179, max_SV = 255;
 
-static int calibration_idx = -1;
-static std::vector<cv::Point> right_eye_calibration, left_eye_calibration, forehead_calibration;
+static int calibration_frame = -1;
+static cv::Point right_eye_calibration[CALIBRATION_LENGTH], left_eye_calibration[CALIBRATION_LENGTH], forehead_calibration[CALIBRATION_LENGTH];
+static cv::Point calibrated_forehead, calibrated_right_eye, calibrated_left_eye;
 
 std::string webcam_window = "Webcam Display";
 
@@ -79,7 +91,34 @@ static void on_high_V_thresh_trackbar(int, void *) {
 
 static void on_callibrate_gaze_button(int state, void *) {
 	std::cout << "Button pressed!" << std::endl;
-	calibration_idx = 0;
+	calibration_frame = 0;
+}
+
+static void parse_calibration_data() {
+	int forehead_x_total, forehead_y_total;
+	int righteye_x_total, righteye_y_total;
+	int lefteye_x_total, lefteye_y_total;
+
+	for (int i = 0; i < CALIBRATION_LENGTH; ++i) {
+		// Forehead data
+		forehead_x_total += forehead_calibration[i].x;
+		forehead_y_total += forehead_calibration[i].y;
+		// Right eye data
+		righteye_x_total += right_eye_calibration[i].x;
+		righteye_y_total += right_eye_calibration[i].y;
+		// Left eye data
+		lefteye_x_total += left_eye_calibration[i].x;
+		lefteye_y_total += left_eye_calibration[i].y;
+	}
+
+	calibrated_forehead.x = forehead_x_total / CALIBRATION_LENGTH;
+	calibrated_forehead.y = forehead_y_total / CALIBRATION_LENGTH;
+
+	calibrated_right_eye.x = righteye_x_total / CALIBRATION_LENGTH;
+	calibrated_right_eye.y = righteye_y_total / CALIBRATION_LENGTH;
+
+	calibrated_left_eye.x = lefteye_x_total / CALIBRATION_LENGTH;
+	calibrated_left_eye.y = lefteye_y_total / CALIBRATION_LENGTH;
 }
 
 /**
@@ -114,7 +153,6 @@ int main() {
 		cv::namedWindow(webcam_window);
 		cv::createButton("Calibrate Gaze", on_callibrate_gaze_button);  
 
-
 		cv::createTrackbar("Low H", webcam_window, &low_H, max_H, on_low_H_thresh_trackbar);
 		cv::createTrackbar("High H", webcam_window, &high_H, max_H, on_high_H_thresh_trackbar);
 		cv::createTrackbar("Low S", webcam_window, &low_S, max_SV, on_low_S_thresh_trackbar);
@@ -132,23 +170,6 @@ int main() {
 			std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
 			face_eye_detector.detectFace(frame);
-
-			// Timing for the face checking and eye detection process
-			end = std::chrono::steady_clock::now();
-			double frame_latency = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
-
-			// Display the processing time for this frame
-			cv::putText(frame, "Frame Latency: " + std::to_string((frame_latency) / MICROSECONDS_PER_SECOND),
-										cv::Point(0, 20), cv::FONT_HERSHEY_SIMPLEX, 0.45, cv::Scalar(255, 0, 0));
-
-			// Print average latency once per second, skipping the first second
-			if (!f_idx && total_latency) {
-				std::cout << "\033[1;31mAvg Frame Latency:\033[0m " << total_latency / MICROSECONDS_PER_SECOND / FPS << std::endl;
-				total_latency = 0;
-			}
-			total_latency += frame_latency;
-
-			f_idx = (f_idx + 1) % FPS;
 
 			cv::Rect le = left_eye.getCoords();
 			cv::Rect re = right_eye.getCoords();
@@ -207,13 +228,24 @@ int main() {
 				right_eye_center.x += right_eye.getCoords().x;
 				right_eye_center.y += right_eye.getCoords().y;
 
+				if (calibration_frame >= 0) {
+					forehead_calibration[calibration_frame] = forehead_dot_center;
+					left_eye_calibration[calibration_frame] = left_eye_center;
+					right_eye_calibration[calibration_frame] = right_eye_center;
+				}
+
 				cv::circle(frame, right_eye_center, 3, cv::Scalar(0,255,0), -1);
 				// cv::circle(frame, right_eye_center, right_eye.getPupilRadius(), cv::Scalar(0,0,255));
+
+				// Draw the calibrated locations of the forehead & eye features.
+				cv::circle(frame, calibrated_forehead, 3, cv::Scalar(255, 255, 0), -1);
+				cv::circle(frame, calibrated_left_eye, 3, cv::Scalar(255, 255, 0), -1);
+				cv::circle(frame, calibrated_right_eye, 3, cv::Scalar(255, 255, 0), -1);
+				cv::line(frame, calibrated_left_eye, calibrated_right_eye, cv::Scalar(255, 255, 75), 2);
 
 				cv::line(frame, left_eye_center, forehead_dot_center, cv::Scalar(0, 255, 255), 2);
 				cv::line(frame, right_eye_center, forehead_dot_center, cv::Scalar(0, 255, 255), 2);
 				cv::line(frame, left_eye_center, right_eye_center, cv::Scalar(0, 255, 255), 2);
-
 
 				cv::resize(leye_frame, leye_frame, cv::Size(), 2, 2, cv::INTER_CUBIC);
 				cv::resize(reye_frame, reye_frame, cv::Size(), 2, 2, cv::INTER_CUBIC);
@@ -224,7 +256,32 @@ int main() {
 				face_eye_detector.drawFace(frame);
 				face_eye_detector.drawEyes(frame);
 				face_eye_detector.drawLandmarks(frame);
+
+				if (calibration_frame >= 0 && calibration_frame++ >= CALIBRATION_LENGTH) {
+					calibration_frame = -1;
+					std::cout << "Calibration finished..." << std::endl;
+					// Call calibration function
+					parse_calibration_data();
+				}
 			}
+
+
+			// Timing for the face checking and eye detection process
+			end = std::chrono::steady_clock::now();
+			double frame_latency = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+
+			// Display the processing time for this frame
+			cv::putText(frame, "Frame Latency: " + std::to_string((frame_latency) / MICROSECONDS_PER_SECOND),
+										cv::Point(0, 20), cv::FONT_HERSHEY_SIMPLEX, 0.45, cv::Scalar(255, 0, 0));
+
+			// Print average latency once per second, skipping the first second
+			if (!f_idx && total_latency) {
+				std::cout << "\033[1;31mAvg Frame Latency:\033[0m " << total_latency / MICROSECONDS_PER_SECOND / FPS << std::endl;
+				total_latency = 0;
+			}
+			total_latency += frame_latency;
+
+			f_idx = (f_idx + 1) % FPS;
 
 			cv::imshow(webcam_window, frame);
 
