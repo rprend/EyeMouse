@@ -13,6 +13,7 @@ void camux::drawRectangle(cv::Mat &frame, const cv::Rect &coords) {
 }
 
 cv::Rect camux::boundingRect(const camux::Points& points) { 
+    if (points.size() == 0) return cv::Rect(); 
     // Note that min_x, min_y = UINT_MAX does NOT do the same assignment as doing them 
     // separately. 
     unsigned min_x = UINT_MAX;
@@ -33,13 +34,15 @@ cv::Rect camux::boundingRect(const camux::Points& points) {
     return cv::Rect(min_x, min_y, max_x - min_x, max_y - min_y);
 }
 
-cv::Rect camux::boundingRectMargin(const camux::Points& points, const float p_err) {
+cv::Rect camux::boundingRectMargin(const camux::Points& points, const float p_err_width, const float p_err_height) {
+    if (points.size() == 0) return cv::Rect(); 
+    
     // Find the bounding rectangle normally
     cv::Rect r = camux::boundingRect(points);
 
     // Increase the width and height of the bounding box by p_err percent.
-    unsigned width = r.width * (1+p_err);
-    unsigned height = r.height * (1+p_err);
+    unsigned width = r.width * (1+p_err_width);
+    unsigned height = r.height * (1+p_err_height);
     
     // Adjust the x and y coordinates so the center of the bounding box stays in the same place.
     // E.g 100x100 px adjusted by 10% gives 110x110. So we decrease the starting x & y by 5.

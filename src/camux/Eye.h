@@ -31,6 +31,8 @@ namespace camux {
 
         cv::Point2u findPupilCenter(cv::Mat& eye);
 
+        int getEyeArea() { return coords_.height * coords_.width; }
+
     private:
         EyeType type_;
         cv::Rect coords_;

@@ -37,7 +37,7 @@ namespace camux {
      * @param p_err 
      * @return cv::Rect 
      */
-    cv::Rect boundingRectMargin(const Points& points, float p_err);
+    cv::Rect boundingRectMargin(const Points& points, const float p_err_width, const float p_err_height);
 
 }
 

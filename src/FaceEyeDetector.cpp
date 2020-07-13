@@ -147,8 +147,8 @@ void FaceEyeDetector::_detectDLIB(cv::Mat &frame) {
         }
     }
 
-    left_.setCoords(camux::boundingRectMargin(l_eye, .5));
-    right_.setCoords(camux::boundingRectMargin(r_eye, .5));
+    left_.setCoords(camux::boundingRectMargin(l_eye, .5, .5));
+    right_.setCoords(camux::boundingRectMargin(r_eye, .5, .5));
 
     // camux::drawRectangle(frame, left_.getCoords());
     // camux::drawRectangle(frame, right_.getCoords());
@@ -160,21 +160,21 @@ void FaceEyeDetector::_detectHAAR(cv::Mat &frame) {
 
     if (frame.empty()) return;
     cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
-    haar_face_.detectMultiScale(gray, faces);
+    haar_face_.detectMultiScale(gray, faces, 1.1, 2, 0, cv::Size(250, 250));
 
-    if (faces.empty()) return;
+    if (faces.size() == 0) return;
     cv::Rect face = faces[0];
 
     face_.setCoords(face);
 
     std::vector<cv::Rect> eyes;
     cv::Mat face_frame = gray(face_.getCoords());
-    haar_eye_.detectMultiScale(face_frame, eyes);
+    haar_eye_.detectMultiScale(face_frame, eyes, 1.1, 2, 0, cv::Size(50, 50));
 
-    left_ = camux::Eye(camux::Left, cv::Rect(eyes[0].x + face_.getCoords().x, eyes[0].y + face_.getCoords().y,
-                eyes[0].width, eyes[0].height));
+    // left_ = camux::Eye(camux::Left, cv::Rect(eyes[0].x + face_.getCoords().x, eyes[0].y + face_.getCoords().y,
+    //             eyes[0].width, eyes[0].height));
     
-    right_ = camux::Eye(camux::Right, cv::Rect(cv::Point(50, 50), cv::Point(70, 70)));
+    // right_ = camux::Eye(camux::Right, cv::Rect(cv::Point(50, 50), cv::Point(70, 70)));
    
     int eyes_found = 0;
     for (int i = 0; i < eyes.size(); ++i) {
@@ -185,16 +185,19 @@ void FaceEyeDetector::_detectHAAR(cv::Mat &frame) {
 
         // Right eye will have an upper left corner on the left side of the screen (mirrored image).
         if (eye.x < face.width / 2) {
-            right_ = camux::Eye(camux::Right, 
-                cv::Rect(eye.x + face.x, eye.y + face.y, eye.width, eye.height));
-            eyes_found++;
+            int prev_eye_area = right_.getEyeArea();
+            // if (prev_eye_area != 0 && (eye.width * eye.height < .5 * prev_eye_area || eye.width * eye.height > 1.5 * prev_eye_area)) { continue; }
+            right_.setCoords(cv::Rect(eye.x + face.x, eye.y + face.y, eye.width, eye.height));
+            // eyes_found++;
         } else {
-            left_ = camux::Eye(camux::Left, 
-                cv::Rect(eye.x + face.x, eye.y + face.y, eye.width, eye.height));
-            eyes_found++;
+            int prev_eye_area = left_.getEyeArea();
+            // if (prev_eye_area != 0 && (eye.width * eye.height < .5 * prev_eye_area || eye.width * eye.height > 1.5 * prev_eye_area)) { continue; }
+
+            left_.setCoords(cv::Rect(eye.x + face.x, eye.y + face.y, eye.width, eye.height));
+            // eyes_found++;
         }
         
-        if (eyes_found >= 2) break;
+        // if (eyes_found >= 2) break;
     }
 }
 

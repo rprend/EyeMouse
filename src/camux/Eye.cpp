@@ -13,6 +13,10 @@ cv::Point2u camux::Eye::findPupilCenter(cv::Mat& eye) {
     cv::cvtColor(eye, eye, cv::COLOR_BGR2GRAY);
 	cv::equalizeHist(eye, eye);
 
+    // TODO: Get eye histogram to better select the pupil from the image
+    cv::Mat histogram;
+    // cv::calcHist(&eye, 1, 0, cv::Mat(), histogram, 256, {0, 256}); 
+
     cv::GaussianBlur(eye, eye, cv::Size(3,3), 0);
     cv::threshold(eye, result, 3, 255, 1);
 

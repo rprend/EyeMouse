@@ -38,8 +38,8 @@ int img_height = 720;
 int img_width = 1080;
 double total_latency = 0;
 
-int low_H = 97, low_S = 43, low_V = 0;
-int high_H = 147, high_S = 255, high_V = 255;
+int low_H = 98, low_S = 43, low_V = 0;
+int high_H = 119, high_S = 255, high_V = 156;
 int max_H = 179, max_SV = 255;
 
 std::string webcam_window = "Webcam Display";
@@ -150,7 +150,7 @@ int main() {
 			face_frame = frame(face_rect);
 
 			if (!face_frame.empty()) {
-				// Identify the red on the image (for forehead dot feature)
+				// Identify the blue on the image (for forehead dot feature)
 				cv::cvtColor(face_frame, hsv, cv::COLOR_BGR2HSV);
 				// cv::InputArray lower_pink = []; 
 				
@@ -158,16 +158,22 @@ int main() {
 				cv::inRange(hsv, cv::Scalar(low_H, low_S, low_V), cv::Scalar(high_H, high_S, high_V), hsv_out);
 				// cv::GaussianBlur(hsv_out, hsv_out, cv::Size(3, 3), 0);
 			
-				cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
+				cv::Mat kernel = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(5, 5));
 				cv::morphologyEx(hsv_out, hsv_out, cv::MORPH_OPEN, kernel);
 				
 				std::vector<std::vector<cv::Point>> contours;
 				cv::findContours(hsv_out, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
-				cv::drawContours(hsv_out, contours, -1, cv::Scalar(128,255,0), 1);
+				cv::drawContours(face_frame, contours, -1, cv::Scalar(225,0,0), 1);
+
+				if (contours.size() > 0) {
+					cv::Rect blue_dot_rect = cv::boundingRect(contours[0]);
+					camux::drawRectangle(face_frame, blue_dot_rect);
+				}
 
 				cv::imshow("Selected parts of the image", hsv_out);
-	
+				cv::imshow("Blue circle", face_frame);
+
 				// cv::cvtColor(leye_frame, leye_frame, cv::COLOR_BGR2GRAY);
 				// cv::cvtColor(reye_frame, reye_frame, cv::COLOR_BGR2GRAY);
 
