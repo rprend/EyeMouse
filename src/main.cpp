@@ -42,6 +42,9 @@ int low_H = 98, low_S = 43, low_V = 0;
 int high_H = 119, high_S = 255, high_V = 156;
 int max_H = 179, max_SV = 255;
 
+static int calibration_idx = -1;
+static std::vector<cv::Point> right_eye_calibration, left_eye_calibration, forehead_calibration;
+
 std::string webcam_window = "Webcam Display";
 
 static void on_low_H_thresh_trackbar(int, void *) {
@@ -74,6 +77,11 @@ static void on_high_V_thresh_trackbar(int, void *) {
     cv::setTrackbarPos("High V", webcam_window, high_V);
 }
 
+static void on_callibrate_gaze_button(int state, void *) {
+	std::cout << "Button pressed!" << std::endl;
+	calibration_idx = 0;
+}
+
 /**
  * Run the GazeMouse software. Opens up a webcam, iterates through each frame, and runs
  * 	the implemented tracking softwares (face detector -> eye detector -> pupil detector ->
@@ -104,6 +112,8 @@ int main() {
 		std::chrono::steady_clock::time_point end;
 
 		cv::namedWindow(webcam_window);
+		cv::createButton("Calibrate Gaze", on_callibrate_gaze_button);  
+
 
 		cv::createTrackbar("Low H", webcam_window, &low_H, max_H, on_low_H_thresh_trackbar);
 		cv::createTrackbar("High H", webcam_window, &high_H, max_H, on_high_H_thresh_trackbar);
@@ -166,9 +176,10 @@ int main() {
 
 				cv::drawContours(face_frame, contours, -1, cv::Scalar(225,0,0), 1);
 
+				cv::Rect forehead_dot_rect;
 				if (contours.size() > 0) {
-					cv::Rect blue_dot_rect = cv::boundingRect(contours[0]);
-					camux::drawRectangle(face_frame, blue_dot_rect);
+					forehead_dot_rect = cv::boundingRect(contours[0]);
+					camux::drawRectangle(face_frame, forehead_dot_rect);
 				}
 
 				cv::imshow("Selected parts of the image", hsv_out);
@@ -182,7 +193,11 @@ int main() {
 
 				cv::Point left_eye_center = left_eye.findPupilCenter(leye_frame);
 				cv::Point right_eye_center = right_eye.findPupilCenter(reye_frame);
-		
+
+				cv::Point forehead_dot_center;
+				forehead_dot_center.x = face.getCoords().x + forehead_dot_rect.x + (forehead_dot_rect.width / 2);
+				forehead_dot_center.y = face.getCoords().y + forehead_dot_rect.y + (forehead_dot_rect.height / 2);
+
 				left_eye_center.x += left_eye.getCoords().x;
 				left_eye_center.y += left_eye.getCoords().y;
 
@@ -194,6 +209,11 @@ int main() {
 
 				cv::circle(frame, right_eye_center, 3, cv::Scalar(0,255,0), -1);
 				// cv::circle(frame, right_eye_center, right_eye.getPupilRadius(), cv::Scalar(0,0,255));
+
+				cv::line(frame, left_eye_center, forehead_dot_center, cv::Scalar(0, 255, 255), 2);
+				cv::line(frame, right_eye_center, forehead_dot_center, cv::Scalar(0, 255, 255), 2);
+				cv::line(frame, left_eye_center, right_eye_center, cv::Scalar(0, 255, 255), 2);
+
 
 				cv::resize(leye_frame, leye_frame, cv::Size(), 2, 2, cv::INTER_CUBIC);
 				cv::resize(reye_frame, reye_frame, cv::Size(), 2, 2, cv::INTER_CUBIC);

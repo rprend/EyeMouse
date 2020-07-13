@@ -33,11 +33,15 @@ namespace camux {
 
         int getEyeArea() { return coords_.height * coords_.width; }
 
+        void setConfidence(double conf) { confidence_ = conf; }
+        double getConfidence() { return confidence_; }
+
     private:
         EyeType type_;
         cv::Rect coords_;
         cv::Point center_;
         int pupil_radius_;
+        double confidence_;
     };
 }
 
