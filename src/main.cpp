@@ -174,6 +174,7 @@ int main() {
 			cv::Rect le = left_eye.getCoords();
 			cv::Rect re = right_eye.getCoords();
 
+
 			leye_frame = frame(le);
 			reye_frame = frame(re);
 
@@ -250,8 +251,8 @@ int main() {
 				cv::resize(leye_frame, leye_frame, cv::Size(), 2, 2, cv::INTER_CUBIC);
 				cv::resize(reye_frame, reye_frame, cv::Size(), 2, 2, cv::INTER_CUBIC);
 
-				cv::imshow("Left eye", leye_frame);
-				cv::imshow("Right eye", reye_frame);
+				// cv::imshow("Left eye", leye_frame);
+				// cv::imshow("Right eye", reye_frame);
 				
 				face_eye_detector.drawFace(frame);
 				face_eye_detector.drawEyes(frame);
